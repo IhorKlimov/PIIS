@@ -1,7 +1,57 @@
+import math
 from random import randrange
 
 field_size = 5
 percentage_of_walls = 0.4
+
+
+class Point:
+    def __init__(self, row, col, parent, finish, is_diagonal):
+        self.row = row
+        self.col = col
+        self.parent = parent
+        self.finish = finish
+        self.is_diagonal = is_diagonal
+
+    def __str__(self):
+        return f"{self.row} {self.col}"
+
+    def __repr__(self):
+        return f"{self.row} {self.col}"
+
+    def __eq__(self, other):
+        if isinstance(other, Point):
+            return self.row == other.row and self.col == other.col
+        return False
+
+    def get_g_value(self):
+        g = 0
+        if self.parent is not None:
+            g += self.parent.get_g_value()
+            if self.is_diagonal:
+                g += 14
+            else:
+                g += 10
+
+        return g
+
+    def get_h_value(self):
+        h = 0
+        h += abs(self.finish.row - self.row)
+        h += abs(self.finish.col - self.col)
+        return h * 10
+
+    def get_f_value(self):
+        return self.get_g_value() + self.get_h_value()
+
+    def get_path(self):
+        path = []
+        current_point = self
+        while current_point is not None:
+            path.append(current_point)
+            current_point = current_point.parent
+
+        return list(reversed(path))
 
 
 def init_coordinates(field):
@@ -146,17 +196,115 @@ def find_path(start, finish, field):
         print("Didn't find a path")
 
 
-def main():
+def li_algorithm():
     field = init_field()
     start, finish = init_coordinates(field)
-
     print(f"Start {start}")
     print(f"Finish {finish}")
-
     field[start[0]][start[1]] = 0
     print_field(field)
-
     find_path(start, finish, field)
+
+
+def get_neighbouring_points(point, finish, field):
+    points = []
+    r = point.row
+    c = point.col
+
+    # check left
+    if c > 0 and field[r][c - 1] != 0:
+        points.append(Point(r, c - 1, point, finish, False))
+
+    # check right
+    if c < field_size - 1 and field[r][c + 1] != 0:
+        points.append(Point(r, c + 1, point, finish, False))
+
+    # check top
+    if r > 0 and field[r - 1][c] != 0:
+        points.append(Point(r - 1, c, point, finish, False))
+
+    # check down
+    if r < field_size - 1 and field[r + 1][c] != 0:
+        points.append(Point(r + 1, c, point, finish, False))
+
+    # check left up
+    if r > 0 and c > 0 and field[r - 1][c - 1] != 0:
+        points.append(Point(r - 1, c - 1, point, finish, True))
+
+    # check right up
+    if r > 0 and c < field_size - 1 and field[r - 1][c + 1] != 0:
+        points.append(Point(r - 1, c + 1, point, finish, True))
+
+    # check left down
+    if r < field_size - 1 and c > 0 and field[r + 1][c - 1] != 0:
+        points.append(Point(r + 1, c - 1, point, finish, True))
+
+    # check right down
+    if r < field_size - 1 and c < field_size - 1 and field[r + 1][c + 1] != 0:
+        points.append(Point(r + 1, c + 1, point, finish, True))
+
+    return points
+
+
+def pick_next_point(open_list):
+    point = None
+
+    for p in open_list:
+        if point is None or p.get_f_value() < point.get_f_value():
+            point = p
+
+    return point
+
+
+def a_star():
+    field = init_field()
+    s, f = init_coordinates(field)
+    finish = Point(f[0], f[1], None, None, False)
+    start = Point(s[0], s[1], None, finish, False)
+    print_field(field)
+    print(f"Start: {start}")
+    print(f"Finish: {finish}")
+
+    # 1
+    open_list = [start]
+    closed_list = []
+
+    current_point = start
+
+    # 2
+    while True:
+        if current_point == finish:
+            print("Found path!")
+            print(current_point.get_path())
+            return
+
+        if len(open_list) == 0:
+            print("No possible path")
+            return
+
+        points = get_neighbouring_points(current_point, finish, field)
+        for p in points:
+            if p not in closed_list:
+                # 9
+                if p in open_list:
+                    old = open_list[open_list.index(p)]
+                    if old.get_g_value() >= p.get_g_value():
+                        open_list.remove(old)
+                        open_list.append(p)
+                else:
+                    open_list.append(p)
+
+        # 3
+        open_list.remove(current_point)
+        closed_list.append(current_point)
+
+        # 4
+        current_point = pick_next_point(open_list)
+
+
+def main():
+    li_algorithm()
+    a_star()
 
 
 if __name__ == '__main__':
