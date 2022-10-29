@@ -1,4 +1,5 @@
 import random
+from math import inf
 
 
 class Board:
@@ -99,6 +100,9 @@ class Node:
             self.color = 1
         else:
             self.color = -1
+        self.alpha = -inf
+        self.beta = inf
+        self.skip = False
 
     def add(self, node):
         self.children.append(node)
@@ -113,6 +117,16 @@ class Node:
         for n in self.children:
             if value is None or -n.value > value:
                 value = -n.value
+
+        return value
+
+    def get_max_negative_negamax_value_with_pruning(self):
+        value = None
+
+        for n in self.children:
+            if value is None or -n.value > value:
+                value = -n.value
+                self.alpha = max(self.alpha, value)
 
         return value
 
@@ -139,7 +153,7 @@ class Node:
 
     def get_unrated_child(self):
         for c in self.children:
-            if c.value is None:
+            if c.value is None and not c.skip:
                 return c
 
         return None
@@ -206,18 +220,44 @@ def main():
     print(node.children[0].children[0])
 
     # assign values, negamax
+    # checked_node = node
+    # while True:
+    #     if checked_node is None:
+    #         break
+    #     if current_node.value is not None:
+    #         current_node = current_node.parent
+    #     if checked_node.are_all_children_rated():
+    #         checked_node.value = checked_node.get_max_negative_negamax_value()
+    #
+    #         checked_node = checked_node.parent
+    #     else:
+    #         checked_node = checked_node.get_unrated_child()
+    #
+    # print(node.value)
+
+    # assign values, negamax with pruning
     checked_node = node
     while True:
         if checked_node is None:
             break
-        if current_node.value is not None:
-            current_node = current_node.parent
+        if checked_node.value is not None:
+            checked_node = checked_node.parent
         if checked_node.are_all_children_rated():
-            checked_node.value = checked_node.get_max_negative_negamax_value()
+            checked_node.value = checked_node.get_max_negative_negamax_value_with_pruning()
+            if checked_node.parent is not None:
+                checked_node.parent.alpha = max(checked_node.parent.alpha, checked_node.value)
 
             checked_node = checked_node.parent
         else:
+            if checked_node.alpha >= checked_node.beta:
+                print("Pruning")
+                checked_node.skip = True
+                checked_node = checked_node.get_unrated_child()
+                continue
+
             checked_node = checked_node.get_unrated_child()
+            checked_node.alpha = checked_node.parent.alpha
+            checked_node.beta = checked_node.parent.beta
 
     print(node.value)
 
