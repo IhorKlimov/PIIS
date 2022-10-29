@@ -256,10 +256,12 @@ def main():
                 continue
 
             checked_node = checked_node.get_unrated_child()
-            checked_node.alpha = checked_node.parent.alpha
-            checked_node.beta = checked_node.parent.beta
+            checked_node.alpha = -checked_node.parent.alpha
+            checked_node.beta = -checked_node.parent.beta
 
     print(node.value)
+
+
 
 
 if __name__ == '__main__':
