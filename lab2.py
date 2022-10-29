@@ -98,6 +98,7 @@ class Node:
         self.side = side
         self.alpha = -inf
         self.beta = inf
+        self.skip = False
 
     def add(self, node):
         self.children.append(node)
@@ -131,8 +132,6 @@ class Node:
             if value is None or n.value > value:
                 value = n.value
                 self.alpha = max(self.alpha, value)
-                if self.beta <= self.alpha:
-                    break
 
         return value
 
@@ -143,8 +142,6 @@ class Node:
             if value is None or n.value < value:
                 value = n.value
                 self.beta = min(self.beta, value)
-                if self.beta <= self.alpha:
-                    break
 
         return value
 
@@ -153,7 +150,7 @@ class Node:
 
     def get_unrated_child(self):
         for c in self.children:
-            if c.value is None:
+            if c.value is None and not c.skip:
                 return c
 
         return None
@@ -240,9 +237,9 @@ def main():
     while True:
         if checked_node is None:
             break
-        if current_node.value is not None:
-            current_node = current_node.parent
-        if checked_node.are_all_children_rated():
+        if checked_node.value is not None or len(checked_node.children) == 0:
+            checked_node = checked_node.parent
+        elif checked_node.are_all_children_rated():
             side = checked_node.children[0].side
             if side == "X":
                 checked_node.value = checked_node.get_max_child_value_with_pruning()
@@ -258,12 +255,15 @@ def main():
         else:
             if checked_node.beta <= checked_node.alpha:
                 print("Pruning")
-                checked_node = checked_node.parent
+                checked_node.skip = True
+                checked_node = checked_node.get_unrated_child()
                 continue
 
             checked_node = checked_node.get_unrated_child()
             checked_node.alpha = checked_node.parent.alpha
             checked_node.beta = checked_node.parent.beta
+
+
 
     print(node.value)
 
