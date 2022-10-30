@@ -103,6 +103,7 @@ class Node:
         self.alpha = -inf
         self.beta = inf
         self.skip = False
+        self.score = None
 
     def add(self, node):
         self.children.append(node)
@@ -129,6 +130,14 @@ class Node:
                 self.alpha = max(self.alpha, value)
 
         return value
+
+    def get_negascout_score(self):
+        for idx, n in enumerate(self.children):
+            score = -n.value
+            n.score = score
+            self.alpha = max(self.alpha, score)
+
+        return self.alpha
 
     def get_max_child_value(self):
         value = None
@@ -236,6 +245,36 @@ def main():
     # print(node.value)
 
     # assign values, negamax with pruning
+    # checked_node = node
+    # while True:
+    #     if checked_node is None:
+    #         break
+    #     if checked_node.value is not None:
+    #         checked_node = checked_node.parent
+    #     if checked_node.are_all_children_rated():
+    #         checked_node.value = checked_node.get_max_negative_negamax_value_with_pruning()
+    #         if checked_node.parent is not None:
+    #             checked_node.parent.alpha = max(checked_node.parent.alpha, checked_node.value)
+    #
+    #         checked_node = checked_node.parent
+    #     else:
+    #         if checked_node.alpha >= checked_node.beta:
+    #             print("Pruning")
+    #             checked_node.skip = True
+    #             checked_node = checked_node.get_unrated_child()
+    #             continue
+    #
+    #         checked_node = checked_node.get_unrated_child()
+    #         checked_node.alpha = -checked_node.parent.alpha
+    #         checked_node.beta = -checked_node.parent.beta
+    #
+    # print(node.value)
+
+    # assign values, negascout
+    negascout(node)
+
+
+def negascout(node):
     checked_node = node
     while True:
         if checked_node is None:
@@ -243,7 +282,7 @@ def main():
         if checked_node.value is not None:
             checked_node = checked_node.parent
         if checked_node.are_all_children_rated():
-            checked_node.value = checked_node.get_max_negative_negamax_value_with_pruning()
+            checked_node.value = checked_node.get_negascout_score()
             if checked_node.parent is not None:
                 checked_node.parent.alpha = max(checked_node.parent.alpha, checked_node.value)
 
@@ -255,13 +294,18 @@ def main():
                 checked_node = checked_node.get_unrated_child()
                 continue
 
-            checked_node = checked_node.get_unrated_child()
-            checked_node.alpha = -checked_node.parent.alpha
-            checked_node.beta = -checked_node.parent.beta
+            if checked_node is not None:
+                checked_node = checked_node.get_unrated_child()
+                print(f"{checked_node.value}")
+                idx = checked_node.parent.children.index(checked_node)
+                if idx == 0:
+                    checked_node.alpha = -checked_node.parent.alpha - 1
+                    checked_node.beta = -checked_node.parent.alpha
+                else:
+                    checked_node.alpha = -checked_node.parent.beta
+                    checked_node.beta = -checked_node.parent.alpha
 
     print(node.value)
-
-
 
 
 if __name__ == '__main__':
