@@ -206,34 +206,20 @@ def main():
         boards.clear()
         boards = new_boards
 
-    print(f"{x_wins} {o_wins} {drafts}")
-    print(node)
-    print(node.children[0])
-    print(node.children[0].children[0])
+    print("Generating tic tac toe states with X going first")
+    print(f"Possible X wins: {x_wins}. Possible O wins: {o_wins}. Possible drafts: {drafts}")
+    # print(node)
+    # print(node.children[0])
+    # print(node.children[0].children[0])
 
-    # assign values, minimax
-    # checked_node = node
-    # while True:
-    #     if checked_node is None:
-    #         break
-    #     if current_node.value is not None:
-    #         current_node = current_node.parent
-    #     if checked_node.are_all_children_rated():
-    #         side = checked_node.children[0].side
-    #         if side == "X":
-    #             checked_node.value = checked_node.get_max_child_value()
-    #         else:
-    #             # checked_node.value = checked_node.get_min_child_value()
-    #             checked_node.value = checked_node.get_random_child_value()
-    #
-    #         checked_node = checked_node.parent
-    #     else:
-    #         checked_node = checked_node.get_unrated_child()
-    #
-    # print(node.value)
+    # minimax(current_node, node, False)
+    minimax_with_pruning(node, False)
 
-    # assign values, minimax alpha beta pruning
+
+def minimax_with_pruning(node, use_random):
     checked_node = node
+    pruned = 0
+
     while True:
         if checked_node is None:
             break
@@ -246,16 +232,19 @@ def main():
                 if checked_node.parent is not None:
                     checked_node.parent.alpha = max(checked_node.parent.alpha, checked_node.value)
             else:
-                checked_node.value = checked_node.get_min_child_value_with_pruning()
-                # checked_node.value = checked_node.get_random_child_value()
+                if use_random:
+                    checked_node.value = checked_node.get_random_child_value()
+                else:
+                    checked_node.value = checked_node.get_min_child_value_with_pruning()
+
                 if checked_node.parent is not None:
                     checked_node.parent.beta = min(checked_node.parent.beta, checked_node.value)
 
             checked_node = checked_node.parent
         else:
             if checked_node.beta <= checked_node.alpha:
-                print("Pruning")
                 checked_node.skip = True
+                pruned = pruned + 1
                 checked_node = checked_node.get_unrated_child()
                 continue
 
@@ -263,9 +252,31 @@ def main():
             checked_node.alpha = checked_node.parent.alpha
             checked_node.beta = checked_node.parent.beta
 
+    print(f"Optimal result with random opponent = {use_random}: {node.value}. Pruned times = {pruned}")
 
 
-    print(node.value)
+def minimax(current_node, node, use_random):
+    checked_node = node
+    while True:
+        if checked_node is None:
+            break
+        if current_node.value is not None:
+            current_node = current_node.parent
+        if checked_node.are_all_children_rated():
+            side = checked_node.children[0].side
+            if side == "X":
+                checked_node.value = checked_node.get_max_child_value()
+            else:
+                if use_random:
+                    checked_node.value = checked_node.get_random_child_value()
+                else:
+                    checked_node.value = checked_node.get_min_child_value()
+
+            checked_node = checked_node.parent
+        else:
+            checked_node = checked_node.get_unrated_child()
+
+    print(f"Optimal result with random opponent = {use_random}: {node.value}")
 
 
 if __name__ == '__main__':

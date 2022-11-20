@@ -198,11 +198,12 @@ def find_path(start, finish, field):
 
 def li_algorithm():
     field = init_field()
+    print("Board:")
+    print_field(field)
     start, finish = init_coordinates(field)
     print(f"Start {start}")
     print(f"Finish {finish}")
     field[start[0]][start[1]] = 0
-    print_field(field)
     find_path(start, finish, field)
 
 
@@ -258,10 +259,11 @@ def pick_next_point(open_list):
 
 def a_star():
     field = init_field()
+    print("Board:")
+    print_field(field)
     s, f = init_coordinates(field)
     finish = Point(f[0], f[1], None, None, False)
     start = Point(s[0], s[1], None, finish, False)
-    print_field(field)
     print(f"Start: {start}")
     print(f"Finish: {finish}")
 
@@ -303,7 +305,7 @@ def a_star():
 
 
 def main():
-    li_algorithm()
+    # li_algorithm()
     a_star()
 
 

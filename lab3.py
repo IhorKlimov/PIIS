@@ -223,59 +223,65 @@ def main():
         boards.clear()
         boards = new_boards
 
-    print(f"{x_wins} {o_wins} {drafts}")
-    print(node)
-    print(node.children[0])
-    print(node.children[0].children[0])
+    print("Generating tic tac toe states with X going first")
+    print(f"Possible X wins: {x_wins}. Possible O wins: {o_wins}. Possible drafts: {drafts}")
+    # print(node)
+    # print(node.children[0])
+    # print(node.children[0].children[0])
 
-    # assign values, negamax
-    # checked_node = node
-    # while True:
-    #     if checked_node is None:
-    #         break
-    #     if current_node.value is not None:
-    #         current_node = current_node.parent
-    #     if checked_node.are_all_children_rated():
-    #         checked_node.value = checked_node.get_max_negative_negamax_value()
-    #
-    #         checked_node = checked_node.parent
-    #     else:
-    #         checked_node = checked_node.get_unrated_child()
-    #
-    # print(node.value)
-
-    # assign values, negamax with pruning
-    # checked_node = node
-    # while True:
-    #     if checked_node is None:
-    #         break
-    #     if checked_node.value is not None:
-    #         checked_node = checked_node.parent
-    #     if checked_node.are_all_children_rated():
-    #         checked_node.value = checked_node.get_max_negative_negamax_value_with_pruning()
-    #         if checked_node.parent is not None:
-    #             checked_node.parent.alpha = max(checked_node.parent.alpha, checked_node.value)
-    #
-    #         checked_node = checked_node.parent
-    #     else:
-    #         if checked_node.alpha >= checked_node.beta:
-    #             print("Pruning")
-    #             checked_node.skip = True
-    #             checked_node = checked_node.get_unrated_child()
-    #             continue
-    #
-    #         checked_node = checked_node.get_unrated_child()
-    #         checked_node.alpha = -checked_node.parent.alpha
-    #         checked_node.beta = -checked_node.parent.beta
-    #
-    # print(node.value)
-
-    # assign values, negascout
+    # negamax(current_node, node)
+    # negamax_with_pruning(node)
     negascout(node)
+
+
+def negamax(current_node, node):
+    checked_node = node
+    while True:
+        if checked_node is None:
+            break
+        if current_node.value is not None:
+            current_node = current_node.parent
+        if checked_node.are_all_children_rated():
+            checked_node.value = checked_node.get_max_negative_negamax_value()
+
+            checked_node = checked_node.parent
+        else:
+            checked_node = checked_node.get_unrated_child()
+
+    print(f"Optimal result: {node.value}")
+
+
+def negamax_with_pruning(node):
+    checked_node = node
+    pruned = 0
+    while True:
+        if checked_node is None:
+            break
+        if checked_node.value is not None:
+            checked_node = checked_node.parent
+        if checked_node.are_all_children_rated():
+            checked_node.value = checked_node.get_max_negative_negamax_value_with_pruning()
+            if checked_node.parent is not None:
+                checked_node.parent.alpha = max(checked_node.parent.alpha, checked_node.value)
+
+            checked_node = checked_node.parent
+        else:
+            if checked_node.alpha >= checked_node.beta:
+                checked_node.skip = True
+                pruned = pruned + 1
+                checked_node = checked_node.get_unrated_child()
+                continue
+
+            checked_node = checked_node.get_unrated_child()
+            checked_node.alpha = -checked_node.parent.alpha
+            checked_node.beta = -checked_node.parent.beta
+
+    print(f"Optimal result: {node.value}. Pruned times = {pruned}")
 
 
 def negascout(node):
     checked_node = node
+    pruned = 0
     while True:
         if checked_node is None:
             break
@@ -289,14 +295,13 @@ def negascout(node):
             checked_node = checked_node.parent
         else:
             if checked_node.alpha >= checked_node.beta:
-                print("Pruning")
                 checked_node.skip = True
+                pruned = pruned + 1
                 checked_node = checked_node.get_unrated_child()
                 continue
 
             if checked_node is not None:
                 checked_node = checked_node.get_unrated_child()
-                print(f"{checked_node.value}")
                 idx = checked_node.parent.children.index(checked_node)
                 if idx == 0:
                     checked_node.alpha = -checked_node.parent.alpha - 1
@@ -305,7 +310,7 @@ def negascout(node):
                     checked_node.alpha = -checked_node.parent.beta
                     checked_node.beta = -checked_node.parent.alpha
 
-    print(node.value)
+    print(f"Optimal result: {node.value}. Pruned times = {pruned}")
 
 
 if __name__ == '__main__':
